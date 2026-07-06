@@ -1,0 +1,67 @@
+/* Shared base layer for every Dew app. Apps import this AFTER `@import "tailwindcss"`.
+   Pulls in the design tokens, then sets calm premium element defaults. */
+
+@import "./theme.css";
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-background);
+    background-image: var(--gradient-lavender);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-foreground);
+  }
+
+  ::selection {
+    background: rgba(198, 63, 176, 0.18);
+  }
+
+  /* Interactive elements show a pointer (native <button> doesn't by default). */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  [role="switch"],
+  [role="menuitem"],
+  a[href],
+  label[for],
+  summary,
+  select {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* Clickable non-semantic elements (e.g. an onClick image/div) opt in. */
+  .clickable {
+    cursor: pointer;
+  }
+
+  /* Respect reduced-motion for all the soft transitions Dew leans on. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}

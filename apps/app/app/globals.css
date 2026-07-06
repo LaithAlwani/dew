@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@dew/ui/styles/globals.css";
+
+/* Scan this app + the shared UI package for class names (workspace pkgs live
+   under node_modules and aren't auto-detected). */
+@source "../";
+@source "../../../packages/ui/src";

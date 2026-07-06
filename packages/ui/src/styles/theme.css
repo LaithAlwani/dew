@@ -1,0 +1,154 @@
+/* =============================================================================
+   DEW DESIGN TOKENS  ·  single source of truth
+   Tailwind v4 CSS-first theme. Every color, gradient, radius, shadow, blur,
+   motion and font token for the whole app lives here. Values reconciled with
+   the imported Claude Design ("Dew Onboarding.dc.html"): Cormorant Garamond +
+   Manrope, purple #7B52C4 accent, #6D4AA0→#8657C8 primary gradient.
+   ========================================================================== */
+
+@theme {
+  /* ---- Brand palette ---------------------------------------------------- */
+  /* Lavender — backgrounds, surfaces, soft fills */
+  --color-lavender-50: #fbf9fe;
+  --color-lavender-100: #f3edfb;
+  --color-lavender-200: #eae0f5;
+  --color-lavender-300: #d9c7ef;
+  --color-lavender-400: #c5a4e8;
+  --color-lavender-500: #a98ce8;
+  --color-lavender-600: #8e6bd9;
+  --color-lavender-700: #7350bf;
+
+  /* Purple — primary accent (buttons, active states, emphasis) */
+  --color-purple-400: #8657c8;
+  --color-purple-500: #7b52c4;
+  --color-purple-600: #6d4aa0;
+  --color-purple-700: #58398a;
+  --color-purple-800: #43296b;
+
+  /* Fuchsia — secondary accent, glows, highlights */
+  --color-fuchsia-400: #e09bcb;
+  --color-fuchsia-500: #d98bc4;
+  --color-fuchsia-600: #c23fb0;
+
+  /* Berry — warm soft accent */
+  --color-berry-400: #dd7a99;
+  --color-berry-500: #c2557a;
+  --color-berry-600: #a63f63;
+
+  /* Pink-lavender + off-white — hero washes, card tints */
+  --color-pinklav: #f6eef6;
+  --color-offwhite: #fdfbff;
+
+  /* Warm neutrals — sand tones used sparingly */
+  --color-sand-100: #f5f0ea;
+  --color-sand-200: #ece3d8;
+  --color-sand-400: #c9bbae;
+
+  /* Ink — deep aubergine text tones (never pure black) */
+  --color-ink-900: #2e2440;
+  --color-ink-700: #3a2e52;
+  --color-ink-500: #6b5f7d;
+  --color-ink-400: #9179b5; /* labels / eyebrows */
+
+  /* ---- Semantic aliases ------------------------------------------------- */
+  --color-background: var(--color-lavender-50);
+  --color-surface: #ffffff;
+  --color-surface-translucent: rgba(255, 255, 255, 0.72);
+  --color-foreground: var(--color-ink-900);
+  --color-muted: var(--color-ink-500);
+  --color-border: rgba(109, 74, 160, 0.14);
+  --color-primary: var(--color-purple-600);
+  --color-primary-foreground: #ffffff;
+  --color-accent: var(--color-purple-500);
+  --color-ring: var(--color-purple-500);
+
+  /* States */
+  --color-success: #4fb477;
+  --color-error: #e0577b;
+  --color-warning: #e0a93e;
+  --color-info: var(--color-lavender-500);
+
+  /* ---- Typography ------------------------------------------------------- */
+  /* Font vars are provided by next/font on <html> in each app's layout. */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+
+  /* ---- Radii ------------------------------------------------------------ */
+  --radius-sm: 0.75rem; /* 12px */
+  --radius-md: 1rem; /* 16px */
+  --radius-card: 1.375rem; /* 22px — default frosted card */
+  --radius-lg: 1.75rem; /* 28px */
+  --radius-pill: 999px;
+
+  /* ---- Shadows (soft, purple-tinted, never hard) ------------------------ */
+  --shadow-soft: 0 10px 22px -8px rgba(120, 90, 150, 0.16);
+  --shadow-float: 0 22px 44px -16px rgba(120, 80, 160, 0.24);
+  --shadow-glow: 0 14px 28px -6px rgba(109, 74, 160, 0.34);
+  --shadow-pressed: 0 2px 10px -4px rgba(109, 74, 160, 0.24);
+
+  /* ---- Blur (frosted glass) --------------------------------------------- */
+  --blur-glass: 14px;
+  --blur-glass-strong: 22px;
+
+  /* ---- Motion ----------------------------------------------------------- */
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 200ms;
+  --duration-base: 340ms;
+  --duration-slow: 560ms;
+}
+
+/* -----------------------------------------------------------------------------
+   Gradients & glows — referenced by name, editable in one place.
+   -------------------------------------------------------------------------- */
+:root {
+  --gradient-lavender: linear-gradient(
+    180deg,
+    #f1eafb 0%,
+    #fbf9fe 52%,
+    #f6eef6 100%
+  );
+  --gradient-primary: linear-gradient(135deg, #6d4aa0 0%, #8657c8 100%);
+  --gradient-glow: radial-gradient(
+    circle,
+    rgba(205, 170, 238, 0.4),
+    transparent 66%
+  );
+  --gradient-sheen: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0) 40%
+  );
+}
+
+/* -----------------------------------------------------------------------------
+   Custom utilities (Tailwind v4 @utility).
+   -------------------------------------------------------------------------- */
+
+@utility glass {
+  background-color: var(--color-surface-translucent);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility glass-strong {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(var(--blur-glass-strong)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--blur-glass-strong)) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow-float);
+}
+
+@utility bg-lavender-wash {
+  background-image: var(--gradient-lavender);
+}
+
+@utility bg-primary-gradient {
+  background-image: var(--gradient-primary);
+}
+
+@utility glow {
+  background-image: var(--gradient-glow);
+}

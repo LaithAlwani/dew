@@ -1,0 +1,20 @@
+{
+  "name": "@dew/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./convex/_generated/api.js",
+    "./server": "./convex/_generated/server.js",
+    "./dataModel": "./convex/_generated/dataModel.d.ts"
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "codegen": "convex codegen",
+    "deploy": "convex deploy",
+    "typecheck": "tsc -p convex/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "convex": "^1.42.1"
+  }
+}
