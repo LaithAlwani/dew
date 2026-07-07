@@ -4,7 +4,7 @@ import { createAuthProxy } from "@dew/auth/proxy";
 // until then it passes through. Sign-in/up are public.
 export default createAuthProxy({
   // Only auth entry points are public; everything else requires sign-in.
-  publicRoutes: ["/", "/sign-in(.*)", "/sign-up(.*)"],
+  publicRoutes: ["/", "/sign-in(.*)", "/sign-up(.*)", "/sso-callback(.*)"],
 });
 
 export const config = {

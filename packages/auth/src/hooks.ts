@@ -6,9 +6,13 @@
 export {
   useAuth,
   useUser,
+  useSignIn,
+  useSignUp,
+  useClerk,
   SignIn,
   SignUp,
   SignInButton,
   SignUpButton,
   UserButton,
+  AuthenticateWithRedirectCallback,
 } from "@clerk/nextjs";

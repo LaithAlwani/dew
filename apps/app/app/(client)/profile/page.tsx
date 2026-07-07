@@ -1,4 +1,5 @@
 import { CreditCard, Bell, Lock, Bookmark, HelpCircle, FileText, ChevronRight } from "lucide-react";
+import { LogoutButton } from "@/components/logout-button";
 
 const SETTINGS = [
   { icon: CreditCard, label: "Subscription & billing", meta: "Free" },
@@ -86,7 +87,7 @@ export default function ClientProfile() {
             ))}
           </div>
 
-          <button className="w-full rounded-[18px] border border-purple-600/10 bg-white/70 p-4 text-sm font-bold text-berry-600">Log out</button>
+          <LogoutButton />
         </div>
       </div>
     </div>

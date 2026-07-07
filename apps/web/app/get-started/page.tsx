@@ -114,11 +114,13 @@ function SignupContent({
   route,
   setRoute,
   gotoSignup,
+  gotoSSO,
   goLogin,
 }: {
   route: "client" | "expert";
   setRoute: (r: "client" | "expert") => void;
   gotoSignup: () => void;
+  gotoSSO: (provider: "google" | "apple") => void;
   goLogin: () => void;
 }) {
   return (
@@ -140,11 +142,11 @@ function SignupContent({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <button onClick={gotoSignup} style={{ width: "100%", height: 50, border: "none", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#fff", background: "#1A1626", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
+        <button onClick={() => gotoSSO("apple")} style={{ width: "100%", height: 50, border: "none", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#fff", background: "#1A1626", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
           <svg width="15" height="18" viewBox="0 0 15 18" fill="#fff"><path d="M12.6 9.6c0-2 1.6-3 1.7-3-.9-1.4-2.4-1.5-2.9-1.6-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7C4.5 5 3.3 5.7 2.6 6.9c-1.4 2.4-.4 6 1 8 .7.9 1.4 2 2.5 2 1 0 1.4-.6 2.6-.6s1.6.6 2.6.6c1.1 0 1.8-1 2.4-1.9.8-1.1 1.1-2.1 1.1-2.2 0 0-2.1-.8-2.2-3.2zM10.7 3.9c.5-.7.9-1.6.8-2.6-.8 0-1.8.6-2.4 1.2-.5.6-1 1.5-.9 2.4.9.1 1.9-.4 2.5-1z" /></svg>
           Continue with Apple
         </button>
-        <button onClick={gotoSignup} style={{ width: "100%", height: 50, border: "1px solid rgba(90,60,130,.16)", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#3A2E52", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
+        <button onClick={() => gotoSSO("google")} style={{ width: "100%", height: 50, border: "1px solid rgba(90,60,130,.16)", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#3A2E52", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
           <svg width="17" height="17" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z" /><path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.8.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3A9 9 0 0 0 9 18z" /><path fill="#FBBC05" d="M3.9 10.7a5.4 5.4 0 0 1 0-3.4V5H.9a9 9 0 0 0 0 8l3-2.3z" /><path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 .9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z" /></svg>
           Continue with Google
         </button>
@@ -202,6 +204,9 @@ export default function Welcome() {
     setShowSignup(true);
   };
   const gotoSignup = () => { window.location.href = `${APP_URL}/sign-up?role=${route}`; };
+  // SSO buttons hand off to apps/app, which fires the Clerk OAuth redirect on load.
+  const gotoSSO = (provider: "google" | "apple") => { window.location.href = `${APP_URL}/sign-up?role=${route}&sso=${provider}`; };
+  const goLogin = () => { window.location.href = `${APP_URL}/sign-in`; };
 
   const active = screen - 1;
   const ds = DESKTOP_STEPS[screen]!;
@@ -221,6 +226,8 @@ export default function Welcome() {
         @keyframes dwFade{from{opacity:0}to{opacity:1}}
         @keyframes dwFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         .dw-fade{animation:dwFadeUp .5s ease both}
+        .dw-slide{scrollbar-width:none;-ms-overflow-style:none}
+        .dw-slide::-webkit-scrollbar{display:none;width:0;height:0}
         @media (prefers-reduced-motion: reduce){*{animation:none !important}}
       `}</style>
 
@@ -282,12 +289,18 @@ export default function Welcome() {
                 <svg width="8" height="14" viewBox="0 0 9 16" fill="none"><path d="M8 1L1.5 8L8 15" stroke="#6D4AA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 Back
               </button>
-              <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} goLogin={() => { window.location.href = `${APP_URL}/sign-in`; }} />
+              <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} gotoSSO={gotoSSO} goLogin={goLogin} />
             </div>
           ) : (
             <>
+              {screen > 0 && (
+                <button onClick={() => go(screen - 1)} className="absolute left-16 top-11 flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-400 transition hover:text-ink-700">
+                  <svg width="7" height="12" viewBox="0 0 9 16" fill="none"><path d="M8 1L1.5 8L8 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  Back
+                </button>
+              )}
               {screen < N - 1 && (
-                <button onClick={() => go(N - 1)} className="absolute right-16 top-11 text-[13.5px] font-semibold text-ink-400">Skip intro</button>
+                <button onClick={() => go(N - 1)} className="absolute right-16 top-11 text-[13.5px] font-semibold text-ink-400 transition hover:text-ink-700">Skip intro</button>
               )}
               <div key={screen} className="dw-fade max-w-[520px]">
                 <div className="mb-[18px] text-xs font-semibold uppercase tracking-[2.5px] text-ink-400">{ds.eyebrow}</div>
@@ -295,9 +308,6 @@ export default function Welcome() {
                 <p className="mb-9 mt-5 text-[16.5px] leading-relaxed text-ink-500">{ds.b}</p>
                 <div className="flex flex-wrap items-center gap-4">
                   <button onClick={desktopPrimary} className="bg-primary-gradient h-14 rounded-[28px] px-8 text-base font-bold text-white shadow-glow">{ds.cta}</button>
-                  {screen > 0 && (
-                    <button onClick={() => go(screen - 1)} className="h-14 px-6 text-[15px] font-semibold text-ink-400">Back</button>
-                  )}
                   {(screen === 0 || screen === N - 1) && (
                     <button onClick={() => openSignup("expert")} className="h-14 rounded-[28px] border border-purple-600/[0.16] bg-white/70 px-6 text-[15px] font-semibold text-purple-600">Join as an expert</button>
                   )}
@@ -392,35 +402,37 @@ export default function Welcome() {
         }}
       >
         {/* SCREEN 0 · HERO */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#F1EAFB 0%,#FBF9FE 50%,#F6EEF6 100%)", display: "flex", flexDirection: "column", padding: "72px 30px 48px" }}>
-          <div style={{ position: "absolute", top: -50, right: -40, width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle,rgba(197,164,232,.4),transparent 70%)", filter: "blur(8px)" }} />
-          <div style={{ position: "absolute", bottom: 120, left: -60, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle,rgba(224,155,203,.28),transparent 70%)", filter: "blur(8px)" }} />
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "url(/makeup.jpg) center/cover", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "60px 30px 44px" }}>
+          {/* colored gradient tint kept over the photo */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,#F1EAFB 0%,#FBF9FE 50%,#F6EEF6 100%)", opacity: 0.55 }} />
+          <div style={{ position: "absolute", top: -50, right: -40, width: 240, height: 240, borderRadius: "50%", background: "radial-gradient(circle,rgba(197,164,232,.55),transparent 70%)", filter: "blur(8px)" }} />
+          <div style={{ position: "absolute", bottom: 140, left: -60, width: 200, height: 200, borderRadius: "50%", background: "radial-gradient(circle,rgba(224,155,203,.42),transparent 70%)", filter: "blur(8px)" }} />
+          {/* strong bottom wash so the headline + buttons stand out clearly */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 18%, rgba(251,249,254,0.75) 44%, rgba(251,249,254,0.98) 74%)" }} />
           <div style={{ display: "flex", justifyContent: "center", position: "relative", zIndex: 2 }}>
-            <Image src="/logo.webp" alt="Dew" width={140} height={72} priority style={{ height: 72, width: "auto" }} />
+            <Image src="/logo.webp" alt="Dew" width={140} height={64} priority style={{ height: 58, width: "auto" }} />
           </div>
-          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", zIndex: 2 }}>
-            <div style={{ position: "absolute", width: 240, height: 290, borderRadius: 120, background: "radial-gradient(circle,rgba(217,139,196,.3),transparent 68%)", filter: "blur(16px)" }} />
-            <div style={{ width: 214, height: 272, borderRadius: 120, background: "url(/makeup.jpg) center/cover", boxShadow: "0 26px 54px rgba(90,60,130,.24)" }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 15, marginBottom: 26, position: "relative", zIndex: 2 }}>
-            <div style={eyebrow}>Curated beauty guidance</div>
-            <h1 style={{ ...heading(39), lineHeight: 1.06, letterSpacing: ".2px" }}>
-              Your beauty routine should feel <em style={em}>personalized.</em> Not random.
-            </h1>
-            <p style={{ fontSize: 14, lineHeight: 1.55, color: "#6B5F7D", margin: 0 }}>
-              Dew matches you with vetted beauty experts around your real goals, concerns, and budget — so you can stop chasing and start choosing.
-            </p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "center", position: "relative", zIndex: 2 }}>
-            <PrimaryButton onClick={() => go(1)}>Start Your Dew Journey</PrimaryButton>
-            <button onClick={() => openSignup("expert")} style={{ border: "none", background: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13.5, fontWeight: 600, color: "#7B52C4" }}>
-              Join as an Expert →
-            </button>
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 22, textShadow: "0 1px 14px rgba(251,249,254,0.95), 0 1px 3px rgba(251,249,254,0.8)" }}>
+              <div style={eyebrow}>Curated beauty guidance</div>
+              <h1 style={{ ...heading(38), lineHeight: 1.06, letterSpacing: ".2px" }}>
+                Your beauty routine should feel <em style={em}>personalized.</em> Not random.
+              </h1>
+              <p style={{ fontSize: 14, lineHeight: 1.55, color: "#6B5F7D", margin: 0 }}>
+                Dew matches you with vetted beauty experts around your real goals, concerns, and budget — so you can stop chasing and start choosing.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+              <PrimaryButton onClick={() => go(1)}>Start Your Dew Journey</PrimaryButton>
+              <button onClick={() => openSignup("expert")} style={{ border: "none", background: "none", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 13.5, fontWeight: 600, color: "#7B52C4" }}>
+                Join as an Expert →
+              </button>
+            </div>
           </div>
         </section>
 
         {/* SCREEN 1 · CHAOS */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#EAE4F2 0%,#ECE6F1 46%,#EEE6EC 100%)", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "112px 30px 48px" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#EAE4F2 0%,#ECE6F1 46%,#EEE6EC 100%)", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "112px 30px 48px" }}>
           {CHAOS.map((c, i) => (
             <div key={i} style={{ position: "absolute", top: c.top, left: c.left, right: c.right, animation: `${c.anim} ease-in-out infinite`, opacity: c.opacity ?? 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: c.strong ? "8px 12px" : "7px 11px", borderRadius: 14, background: `rgba(255,255,255,${c.strong ? 0.72 : 0.6})`, backdropFilter: "blur(7px)", border: "1px solid rgba(255,255,255,.78)", boxShadow: "0 10px 22px rgba(120,90,150,.13)" }}>
@@ -440,7 +452,7 @@ export default function Welcome() {
         </section>
 
         {/* SCREEN 2 · MISMATCH */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#E7E3F3 0%,#EBE5F1 48%,#EEE7EF 100%)", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "112px 30px 48px" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#E7E3F3 0%,#EBE5F1 48%,#EEE7EF 100%)", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "112px 30px 48px" }}>
           {MISMATCH.map((c, i) => (
             <div key={i} style={{ position: "absolute", top: c.top, left: c.left, right: c.right, animation: `${c.anim} ease-in-out infinite`, opacity: c.opacity ?? 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 20, background: "rgba(255,255,255,.68)", border: "1px solid rgba(255,255,255,.78)", boxShadow: "0 10px 20px rgba(120,90,150,.12)" }}>
@@ -459,7 +471,7 @@ export default function Welcome() {
         </section>
 
         {/* SCREEN 3 · CLARITY */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#F5F0FC 0%,#FCFAFE 52%,#F7F1F9 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "104px 30px 48px" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#F5F0FC 0%,#FCFAFE 52%,#F7F1F9 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "104px 30px 48px" }}>
           <div style={{ position: "absolute", top: 120, left: "50%", width: 280, height: 280, borderRadius: "50%", background: "radial-gradient(circle,rgba(210,180,240,.4),transparent 68%)", filter: "blur(24px)", animation: "dwGlowM 7s ease-in-out infinite" }} />
           <div style={{ position: "relative", zIndex: 2, flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ position: "relative", width: 250 }}>
@@ -497,7 +509,7 @@ export default function Welcome() {
         </section>
 
         {/* SCREEN 4 · HOW IT WORKS */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#F3EDFB 0%,#FBF9FE 60%,#F6EEF6 100%)", display: "flex", flexDirection: "column", padding: "110px 30px 44px" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#F3EDFB 0%,#FBF9FE 60%,#F6EEF6 100%)", display: "flex", flexDirection: "column", padding: "110px 30px 44px" }}>
           <div style={{ marginBottom: 22 }}>
             <div style={{ ...eyebrow, marginBottom: 12 }}>How Dew works</div>
             <h2 style={{ ...heading(32), lineHeight: 1.12 }}>
@@ -506,9 +518,9 @@ export default function Welcome() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
             {STEPS.map((s) => (
-              <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 15, padding: "17px 18px", borderRadius: 20, background: "rgba(255,255,255,.72)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,.85)", boxShadow: "0 10px 26px rgba(120,80,160,.1)" }}>
-                <div style={{ width: 44, height: 44, flex: "none", borderRadius: 14, background: s.grad, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "#7B52C4" }}>{s.n}</div>
-                <div>
+              <div key={s.n} style={{ position: "relative", padding: "18px 20px", borderRadius: 20, background: "rgba(255,255,255,.72)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,.85)", boxShadow: "0 10px 26px rgba(120,80,160,.1)" }}>
+                <div style={{ position: "absolute", top: 10, right: 18, fontFamily: "var(--font-display)", fontSize: 46, fontWeight: 600, lineHeight: 1, color: "#7B52C4" }}>{s.n}</div>
+                <div style={{ paddingRight: 44 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#2E2440" }}>{s.title}</div>
                   <div style={{ fontSize: 12.5, color: "#7A6E90", marginTop: 3, lineHeight: 1.4 }}>{s.body}</div>
                 </div>
@@ -519,7 +531,7 @@ export default function Welcome() {
         </section>
 
         {/* SCREEN 5 · FINAL CTA */}
-        <section style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflow: "hidden", background: "linear-gradient(180deg,#F1EAFB 0%,#FBF9FE 52%,#F5EDF6 100%)", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "96px 32px 48px", textAlign: "center" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#F1EAFB 0%,#FBF9FE 52%,#F5EDF6 100%)", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "96px 32px 48px", textAlign: "center" }}>
           <div style={{ position: "absolute", top: 150, left: "50%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(205,170,238,.4),transparent 66%)", filter: "blur(26px)", animation: "dwGlowM 8s ease-in-out infinite" }} />
           <Image src="/logo.webp" alt="Dew" width={150} height={76} style={{ height: 76, width: "auto", position: "relative", zIndex: 2, marginBottom: 26, filter: "drop-shadow(0 12px 26px rgba(140,90,200,.32))" }} />
           <h2 style={{ ...heading(36), marginBottom: 16, position: "relative", zIndex: 2 }}>
@@ -547,7 +559,7 @@ export default function Welcome() {
             style={{ background: "linear-gradient(180deg,#FDFBFF,#F7F1FA)", animation: "dwSheetUp .42s cubic-bezier(.2,.8,.3,1)" }}
           >
             <div className="mx-auto mb-[18px] h-[5px] w-[42px] rounded-full bg-[rgba(123,82,196,0.22)]" />
-            <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} goLogin={() => { window.location.href = `${APP_URL}/sign-in`; }} />
+            <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} gotoSSO={gotoSSO} goLogin={goLogin} />
           </div>
         </div>
       )}
