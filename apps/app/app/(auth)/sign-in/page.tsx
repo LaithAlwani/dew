@@ -6,11 +6,12 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ sso?: string }>;
+  searchParams: Promise<{ sso?: string; method?: string }>;
 }) {
-  const { sso } = await searchParams;
+  const { sso, method } = await searchParams;
   const initialSSO =
     sso === "google" ? "oauth_google" : sso === "apple" ? "oauth_apple" : null;
+  const initialMethod = method === "email" ? "email" : null;
 
-  return <SignInClient initialSSO={initialSSO} />;
+  return <SignInClient initialSSO={initialSSO} initialMethod={initialMethod} />;
 }

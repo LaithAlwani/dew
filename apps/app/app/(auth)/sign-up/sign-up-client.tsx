@@ -2,12 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { AuthChooser } from "@dew/ui";
 import { useSignUp } from "@dew/auth";
 import {
-  AuthLayout,
-  OAuthButtons,
-  OrDivider,
-  RoleToggle,
+  AuthCard,
   Field,
   SubmitButton,
   FormError,
@@ -20,21 +18,28 @@ type Role = "client" | "expert";
 type Strategy = "oauth_google" | "oauth_apple";
 
 const destFor = (role: Role) => (role === "expert" ? "/expert/apply" : "/onboarding");
+const subtitleFor = (role: Role) =>
+  role === "expert"
+    ? "Set up your expert profile to start guiding clients."
+    : "Create your account to meet your matches.";
 
 export function SignUpClient({
   role: initialRole,
   initialSSO,
+  initialMethod,
 }: {
   role: Role;
   initialSSO: Strategy | null;
+  initialMethod: "email" | null;
 }) {
-  // Clerk Signals/Future API: `signUp` is a SignUpFuture with method-style
-  // helpers (password/verifications/sso/finalize) that resolve to `{ error }`.
+  // Clerk Signals/Future API: `signUp` exposes password/verifications/sso/finalize.
   const { signUp } = useSignUp();
   const router = useRouter();
 
   const [role, setRole] = React.useState<Role>(initialRole);
-  const [step, setStep] = React.useState<"form" | "verify">("form");
+  const [view, setView] = React.useState<"chooser" | "email" | "verify">(
+    initialMethod === "email" ? "email" : "chooser",
+  );
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -51,8 +56,8 @@ export function SignUpClient({
       setBusyProvider(strategy);
       const { error: err } = await signUp.sso({
         strategy,
-        redirectUrl: destFor(role), // where Clerk lands the user once the flow completes
-        redirectCallbackUrl: "/sso-callback", // page that finalizes the OAuth return
+        redirectUrl: destFor(role),
+        redirectCallbackUrl: "/sso-callback",
         unsafeMetadata: { role },
       });
       if (err) {
@@ -63,7 +68,7 @@ export function SignUpClient({
     [signUp, role],
   );
 
-  // Auto-start SSO when arriving from the "Continue with Google/Apple" buttons.
+  // Auto-start SSO when arriving from the marketing "Continue with Google/Apple".
   const autoFired = React.useRef(false);
   React.useEffect(() => {
     if (initialSSO && !autoFired.current) {
@@ -100,7 +105,7 @@ export function SignUpClient({
         setError(clerkErrorMessage(sendErr));
         return;
       }
-      setStep("verify");
+      setView("verify");
     } finally {
       setLoading(false);
     }
@@ -128,26 +133,23 @@ export function SignUpClient({
     }
   }
 
-  // While an SSO redirect is being kicked off, show a minimal waiting state.
-  if (initialSSO && busyProvider) {
+  // SSO redirect kicking off.
+  if (busyProvider) {
     return (
-      <AuthLayout
-        brand={SIGNUP_BRAND}
-        mobile={{ title: "Taking you to sign in…", subtitle: "One moment." }}
-        desktop={{ title: "One moment…", subtitle: "Taking you to your provider." }}
-      >
+      <AuthCard title="Taking you to sign in…" subtitle="One moment.">
         <Spinner />
         <FormError>{error}</FormError>
-      </AuthLayout>
+      </AuthCard>
     );
   }
 
-  if (step === "verify") {
+  // Email verification.
+  if (view === "verify") {
     return (
-      <AuthLayout
-        brand={SIGNUP_BRAND}
-        mobile={{ title: "Check your email", subtitle: <>We sent a code to <b className="text-ink-700">{email}</b>.</> }}
-        desktop={{ title: "Check your email", subtitle: <>We sent a code to <b className="text-ink-700">{email}</b>.</> }}
+      <AuthCard
+        title="Check your email"
+        subtitle={<>We sent a code to <b className="text-ink-700">{email}</b>.</>}
+        onBack={() => setView("email")}
       >
         <form onSubmit={submitCode}>
           <FormError>{error}</FormError>
@@ -161,74 +163,49 @@ export function SignUpClient({
             required
           />
           <SubmitButton loading={loading}>Verify &amp; continue</SubmitButton>
-          <button
-            type="button"
-            onClick={() => setStep("form")}
-            className="mt-4 w-full text-center text-[12.5px] font-semibold text-ink-400"
-          >
-            Use a different email
-          </button>
         </form>
-      </AuthLayout>
+      </AuthCard>
     );
   }
 
-  const ctaLabel = role === "expert" ? "Create expert account" : "Create account";
+  // Email / password form (revealed by "Continue with email").
+  if (view === "email") {
+    const ctaLabel = role === "expert" ? "Create expert account" : "Create account";
+    return (
+      <AuthCard
+        title="Let's make beauty feel easier."
+        subtitle={subtitleFor(role)}
+        onBack={() => setView("chooser")}
+      >
+        <form onSubmit={submitForm} className="flex flex-col gap-4">
+          <FormError>{error}</FormError>
+          <Field label="Name" autoComplete="name" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} />
+          <Field label="Email" type="email" autoComplete="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Field label="Password" type="password" autoComplete="new-password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          {/* Clerk bot-protection mount point (when enabled on the instance). */}
+          <div id="clerk-captcha" />
+          <SubmitButton loading={loading}>{ctaLabel}</SubmitButton>
+        </form>
+        <LegalNote />
+        <FooterSwitch prompt="Already have an account?" actionLabel="Log in" onAction={() => router.push("/sign-in")} />
+      </AuthCard>
+    );
+  }
 
+  // Default: the chooser sheet — identical to the get-started CTA.
   return (
-    <AuthLayout
-      brand={SIGNUP_BRAND}
-      mobile={{ title: "Let's make beauty feel easier.", subtitle: "Create your account to meet your matches." }}
-      desktop={{ title: "Create your account", subtitle: "Tell us who you are so we can get you started." }}
-    >
-      <RoleToggle role={role} onChange={setRole} />
-      <OAuthButtons
-        onProvider={(s) => void startOAuth(s)}
-        disabled={!!busyProvider}
-        busyProvider={busyProvider}
+    <AuthCard>
+      <AuthChooser
+        role={role}
+        onRole={setRole}
+        onApple={() => void startOAuth("oauth_apple")}
+        onGoogle={() => void startOAuth("oauth_google")}
+        onEmail={() => setView("email")}
+        onFooter={() => router.push("/sign-in")}
       />
-      <OrDivider />
-      <form onSubmit={submitForm} className="flex flex-col gap-4">
-        <FormError>{error}</FormError>
-        <Field
-          label="Name"
-          autoComplete="name"
-          placeholder="Your full name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <Field
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Field
-          label="Password"
-          type="password"
-          autoComplete="new-password"
-          placeholder="At least 8 characters"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        {/* Clerk bot-protection needs a mount point when enabled on the instance. */}
-        <div id="clerk-captcha" />
-        <SubmitButton loading={loading}>{ctaLabel}</SubmitButton>
-      </form>
-      <LegalNote />
-      <FooterSwitch prompt="Already have an account?" actionLabel="Log in" href="/sign-in" />
-    </AuthLayout>
+    </AuthCard>
   );
 }
-
-const SIGNUP_BRAND = {
-  title: "Let's make beauty feel easier.",
-  subtitle: "Create your account to meet experts matched to your real goals and budget.",
-};
 
 function Spinner() {
   return (

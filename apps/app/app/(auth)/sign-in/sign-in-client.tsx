@@ -2,11 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { AuthChooser } from "@dew/ui";
 import { useSignIn } from "@dew/auth";
 import {
-  AuthLayout,
-  OAuthButtons,
-  OrDivider,
+  AuthCard,
   Field,
   SubmitButton,
   FormError,
@@ -15,21 +14,26 @@ import {
 } from "@/components/auth/auth-ui";
 
 type Strategy = "oauth_google" | "oauth_apple";
+type Role = "client" | "expert";
 
-const DEST = "/home";
+const destFor = (role: Role) => (role === "expert" ? "/expert/dashboard" : "/home");
 
-const SIGNIN_BRAND = {
-  title: "Welcome back to guidance that fits you.",
-  subtitle: "Your experts, your routine, your progress — right where you left off.",
-};
-
-export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
-  // Clerk Signals/Future API: `signIn` is a SignInFuture whose helpers resolve
-  // to `{ error }` and update `signIn.status`.
+export function SignInClient({
+  initialSSO,
+  initialMethod,
+}: {
+  initialSSO: Strategy | null;
+  initialMethod: "email" | null;
+}) {
+  // Clerk Signals/Future API: `signIn` exposes password/sso/resetPassword/finalize.
   const { signIn } = useSignIn();
   const router = useRouter();
 
-  const [mode, setMode] = React.useState<"signin" | "reset">("signin");
+  const [role, setRole] = React.useState<Role>("client");
+  const [view, setView] = React.useState<"chooser" | "email" | "reset">(
+    initialMethod === "email" ? "email" : "chooser",
+  );
+  const dest = destFor(role);
   const [resetSent, setResetSent] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -44,7 +48,7 @@ export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
       setBusyProvider(strategy);
       const { error: err } = await signIn.sso({
         strategy,
-        redirectUrl: DEST,
+        redirectUrl: destFor(role),
         redirectCallbackUrl: "/sso-callback",
       });
       if (err) {
@@ -52,7 +56,7 @@ export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
         setError(clerkErrorMessage(err));
       }
     },
-    [signIn],
+    [signIn, role],
   );
 
   const autoFired = React.useRef(false);
@@ -76,7 +80,7 @@ export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
       }
       if (signIn.status === "complete") {
         await signIn.finalize();
-        router.push(DEST);
+        router.push(dest);
       } else {
         setError("Additional verification is required to sign in.");
       }
@@ -125,7 +129,7 @@ export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
       }
       if (signIn.status === "complete") {
         await signIn.finalize();
-        router.push(DEST);
+        router.push(dest);
       } else {
         setError("Couldn't reset your password. Please try again.");
       }
@@ -134,135 +138,92 @@ export function SignInClient({ initialSSO }: { initialSSO: Strategy | null }) {
     }
   }
 
-  function backToSignIn() {
-    setMode("signin");
-    setResetSent(false);
-    setError(null);
-    setPassword("");
-    setCode("");
-  }
-
   // SSO redirect kicking off.
-  if (initialSSO && busyProvider) {
+  if (busyProvider) {
     return (
-      <AuthLayout
-        brand={SIGNIN_BRAND}
-        mobile={{ title: "Signing you in…", subtitle: "One moment." }}
-        desktop={{ title: "One moment…", subtitle: "Taking you to your provider." }}
-      >
+      <AuthCard title="Signing you in…" subtitle="One moment.">
         <div className="flex justify-center py-6">
           <span className="size-7 animate-spin rounded-full border-2 border-purple-500/30 border-t-purple-500" />
         </div>
         <FormError>{error}</FormError>
-      </AuthLayout>
+      </AuthCard>
     );
   }
 
   // Forgot-password flow.
-  if (mode === "reset") {
+  if (view === "reset") {
     return (
-      <AuthLayout
-        brand={SIGNIN_BRAND}
-        mobile={{ title: "Reset your password", subtitle: resetSent ? <>Enter the code we sent to <b className="text-ink-700">{email}</b>.</> : "We'll email you a reset code." }}
-        desktop={{ title: "Reset your password", subtitle: resetSent ? <>Enter the code we sent to <b className="text-ink-700">{email}</b>.</> : "We'll email you a reset code." }}
+      <AuthCard
+        title="Reset your password"
+        subtitle={resetSent ? <>Enter the code we sent to <b className="text-ink-700">{email}</b>.</> : "We'll email you a reset code."}
+        onBack={() => { setView("email"); setResetSent(false); setError(null); }}
       >
         {!resetSent ? (
           <form onSubmit={requestReset}>
             <FormError>{error}</FormError>
-            <Field
-              label="Email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <Field label="Email" type="email" autoComplete="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             <SubmitButton loading={loading}>Send reset code</SubmitButton>
           </form>
         ) : (
           <form onSubmit={submitReset} className="flex flex-col gap-4">
             <FormError>{error}</FormError>
-            <Field
-              label="Reset code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="123456"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-            />
-            <Field
-              label="New password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <Field label="Reset code" inputMode="numeric" autoComplete="one-time-code" placeholder="123456" value={code} onChange={(e) => setCode(e.target.value)} required />
+            <Field label="New password" type="password" autoComplete="new-password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} required />
             <SubmitButton loading={loading}>Reset password</SubmitButton>
           </form>
         )}
-        <button
-          type="button"
-          onClick={backToSignIn}
-          className="mt-4 w-full text-center text-[12.5px] font-semibold text-ink-400"
-        >
-          Back to log in
-        </button>
-      </AuthLayout>
+      </AuthCard>
     );
   }
 
-  // Default: sign in.
+  // Email / password login form (revealed by "Continue with email").
+  if (view === "email") {
+    return (
+      <AuthCard
+        title="Welcome back."
+        subtitle="Log in to continue your Dew journey."
+        onBack={() => setView("chooser")}
+      >
+        <form onSubmit={submitSignIn} className="flex flex-col gap-4">
+          <FormError>{error}</FormError>
+          <Field label="Email" type="email" autoComplete="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Field
+            label="Password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            aside={
+              <button type="button" onClick={() => { setView("reset"); setError(null); }} className="text-[12.5px] font-semibold text-purple-500">
+                Forgot?
+              </button>
+            }
+          />
+          <SubmitButton loading={loading}>Log in</SubmitButton>
+        </form>
+        <FooterSwitch prompt="New to Dew?" actionLabel="Create an account" onAction={() => router.push("/sign-up")} />
+      </AuthCard>
+    );
+  }
+
+  // Default: the chooser sheet — same 3-button layout as sign-up (no role toggle).
   return (
-    <AuthLayout
-      brand={SIGNIN_BRAND}
-      mobile={{ title: "Welcome back.", subtitle: "Log in to continue your Dew journey." }}
-      desktop={{ title: "Log in", subtitle: "Continue your Dew journey." }}
-    >
-      <OAuthButtons
-        onProvider={(s) => void startOAuth(s)}
-        disabled={!!busyProvider}
-        busyProvider={busyProvider}
+    <AuthCard>
+      <AuthChooser
+        role={role}
+        onRole={setRole}
+        title="Welcome back."
+        subtitle="Log in to continue your Dew journey."
+        footerPrompt="New to Dew?"
+        footerAction="Create an account"
+        busy={busyProvider === "oauth_apple" ? "apple" : busyProvider === "oauth_google" ? "google" : null}
+        onApple={() => void startOAuth("oauth_apple")}
+        onGoogle={() => void startOAuth("oauth_google")}
+        onEmail={() => setView("email")}
+        onFooter={() => router.push("/sign-up")}
       />
-      <OrDivider />
-      <form onSubmit={submitSignIn} className="flex flex-col gap-4">
-        <FormError>{error}</FormError>
-        <Field
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Field
-          label="Password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          aside={
-            <button
-              type="button"
-              onClick={() => {
-                setMode("reset");
-                setError(null);
-              }}
-              className="text-[12.5px] font-semibold text-purple-500"
-            >
-              Forgot?
-            </button>
-          }
-        />
-        <SubmitButton loading={loading}>Log in</SubmitButton>
-      </form>
-      <FooterSwitch prompt="New to Dew?" actionLabel="Create an account" href="/sign-up" />
-    </AuthLayout>
+    </AuthCard>
   );
 }

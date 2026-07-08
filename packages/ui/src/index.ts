@@ -27,3 +27,4 @@ export {
 } from "./components/dialog";
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/tabs";
 export { Avatar } from "./components/avatar";
+export { AuthChooser, type AuthChooserProps } from "./components/auth-chooser";

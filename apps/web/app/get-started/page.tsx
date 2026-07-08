@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { AuthChooser } from "@dew/ui";
 
 /**
  * Dew "Get started" story (marketing) — faithful port of the imported design "Dew Onboarding.dc.html".
@@ -110,59 +111,30 @@ const heading = (size: number): React.CSSProperties => ({
 const em: React.CSSProperties = { fontStyle: "italic", color: "#7B52C4" };
 
 // Sign-up body shared by the mobile drawer and the desktop inline right panel.
+// The sheet itself is the shared <AuthChooser> (single source of truth also used
+// as the app's sign-up landing). Here every action redirects into apps/app.
 function SignupContent({
   route,
   setRoute,
-  gotoSignup,
+  gotoEmail,
   gotoSSO,
   goLogin,
 }: {
   route: "client" | "expert";
   setRoute: (r: "client" | "expert") => void;
-  gotoSignup: () => void;
+  gotoEmail: () => void;
   gotoSSO: (provider: "google" | "apple") => void;
   goLogin: () => void;
 }) {
   return (
-    <>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-        <Image src="/logo.webp" alt="Dew" width={78} height={40} style={{ height: 40, width: "auto" }} />
-      </div>
-      <div style={{ textAlign: "center", fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "#2E2440", marginBottom: 4 }}>Let&apos;s make beauty feel easier.</div>
-      <div style={{ textAlign: "center", fontSize: 12.5, color: "#8A7DA0", marginBottom: 20 }}>
-        {route === "expert" ? "Set up your expert profile to start guiding clients." : "Create your account to meet your matches."}
-      </div>
-
-      <div style={{ display: "flex", gap: 7, background: "rgba(123,82,196,.08)", padding: 5, borderRadius: 16, marginBottom: 20 }}>
-        {(["client", "expert"] as const).map((r) => (
-          <button key={r} onClick={() => setRoute(r)} style={{ flex: 1, height: 44, border: "none", borderRadius: 12, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, background: route === r ? "#ffffff" : "transparent", color: route === r ? "#4A3A6B" : "#8A7DA0", boxShadow: route === r ? "0 4px 12px rgba(90,60,130,.14)" : "none", transition: "all .2s" }}>
-            {r === "client" ? "I'm here for beauty help" : "I'm joining as an expert"}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <button onClick={() => gotoSSO("apple")} style={{ width: "100%", height: 50, border: "none", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#fff", background: "#1A1626", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
-          <svg width="15" height="18" viewBox="0 0 15 18" fill="#fff"><path d="M12.6 9.6c0-2 1.6-3 1.7-3-.9-1.4-2.4-1.5-2.9-1.6-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7C4.5 5 3.3 5.7 2.6 6.9c-1.4 2.4-.4 6 1 8 .7.9 1.4 2 2.5 2 1 0 1.4-.6 2.6-.6s1.6.6 2.6.6c1.1 0 1.8-1 2.4-1.9.8-1.1 1.1-2.1 1.1-2.2 0 0-2.1-.8-2.2-3.2zM10.7 3.9c.5-.7.9-1.6.8-2.6-.8 0-1.8.6-2.4 1.2-.5.6-1 1.5-.9 2.4.9.1 1.9-.4 2.5-1z" /></svg>
-          Continue with Apple
-        </button>
-        <button onClick={() => gotoSSO("google")} style={{ width: "100%", height: 50, border: "1px solid rgba(90,60,130,.16)", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#3A2E52", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 9 }}>
-          <svg width="17" height="17" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.6 9.2c0-.6-.1-1.2-.2-1.8H9v3.4h4.8a4.1 4.1 0 0 1-1.8 2.7v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.5z" /><path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.8.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3A9 9 0 0 0 9 18z" /><path fill="#FBBC05" d="M3.9 10.7a5.4 5.4 0 0 1 0-3.4V5H.9a9 9 0 0 0 0 8l3-2.3z" /><path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.4 1.3l2.6-2.6A9 9 0 0 0 .9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z" /></svg>
-          Continue with Google
-        </button>
-        <button onClick={gotoSignup} style={{ width: "100%", height: 50, border: "none", borderRadius: 25, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "#fff", background: PRIMARY, boxShadow: "0 10px 22px rgba(109,74,160,.3)" }}>
-          Continue with email
-        </button>
-      </div>
-
-      <div style={{ textAlign: "center", fontSize: 12.5, color: "#8A7DA0", marginTop: 18 }}>
-        Already have an account?{" "}
-        <button onClick={goLogin} style={{ border: "none", background: "none", cursor: "pointer", color: "#7B52C4", fontWeight: 600, fontSize: 12.5, fontFamily: "var(--font-sans)" }}>Log in</button>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 16, fontSize: 11, color: "#A99CBC" }}>
-        <span>Privacy</span><span>Terms</span><span>Support</span>
-      </div>
-    </>
+    <AuthChooser
+      role={route}
+      onRole={setRoute}
+      onApple={() => gotoSSO("apple")}
+      onGoogle={() => gotoSSO("google")}
+      onEmail={gotoEmail}
+      onFooter={goLogin}
+    />
   );
 }
 
@@ -203,7 +175,8 @@ export default function Welcome() {
     setRoute(r);
     setShowSignup(true);
   };
-  const gotoSignup = () => { window.location.href = `${APP_URL}/sign-up?role=${route}`; };
+  // Email button lands in the app with the email/password form already open.
+  const gotoEmail = () => { window.location.href = `${APP_URL}/sign-up?role=${route}&method=email`; };
   // SSO buttons hand off to apps/app, which fires the Clerk OAuth redirect on load.
   const gotoSSO = (provider: "google" | "apple") => { window.location.href = `${APP_URL}/sign-up?role=${route}&sso=${provider}`; };
   const goLogin = () => { window.location.href = `${APP_URL}/sign-in`; };
@@ -279,39 +252,37 @@ export default function Welcome() {
 
         {/* RIGHT content — onboarding step, or the sign-up form inline */}
         <div className="relative flex min-w-0 flex-1 flex-col justify-center overflow-y-auto px-16 py-12">
+          {/* Back button — same look + position on every screen, incl. the sign-up sheet */}
+          {(showSignup || screen > 0) && (
+            <button
+              onClick={() => (showSignup ? setShowSignup(false) : go(screen - 1))}
+              aria-label="Back"
+              className="absolute left-16 top-11 z-10 flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-400 transition hover:text-ink-700"
+            >
+              <svg width="7" height="12" viewBox="0 0 9 16" fill="none"><path d="M8 1L1.5 8L8 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              Back
+            </button>
+          )}
           {showSignup ? (
             <div key="signup" className="dw-fade mx-auto w-full max-w-[400px]">
-              <button
-                onClick={() => setShowSignup(false)}
-                aria-label="Back"
-                className="mb-7 flex h-10 items-center gap-2 rounded-full border border-purple-600/15 bg-white pl-3 pr-4 text-[13px] font-semibold text-ink-500 transition hover:text-ink-900"
-              >
-                <svg width="8" height="14" viewBox="0 0 9 16" fill="none"><path d="M8 1L1.5 8L8 15" stroke="#6D4AA0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                Back
-              </button>
-              <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} gotoSSO={gotoSSO} goLogin={goLogin} />
+              <SignupContent route={route} setRoute={setRoute} gotoEmail={gotoEmail} gotoSSO={gotoSSO} goLogin={goLogin} />
             </div>
           ) : (
             <>
-              {screen > 0 && (
-                <button onClick={() => go(screen - 1)} className="absolute left-16 top-11 flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-400 transition hover:text-ink-700">
-                  <svg width="7" height="12" viewBox="0 0 9 16" fill="none"><path d="M8 1L1.5 8L8 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  Back
-                </button>
-              )}
               {screen < N - 1 && (
                 <button onClick={() => go(N - 1)} className="absolute right-16 top-11 text-[13.5px] font-semibold text-ink-400 transition hover:text-ink-700">Skip intro</button>
               )}
               <div key={screen} className="dw-fade max-w-[520px]">
                 <div className="mb-[18px] text-xs font-semibold uppercase tracking-[2.5px] text-ink-400">{ds.eyebrow}</div>
                 <h1 className="font-display text-[52px] font-medium leading-[1.05] text-ink-900">{ds.h}</h1>
-                <p className="mb-9 mt-5 text-[16.5px] leading-relaxed text-ink-500">{ds.b}</p>
-                <div className="flex flex-wrap items-center gap-4">
-                  <button onClick={desktopPrimary} className="bg-primary-gradient h-14 rounded-[28px] px-8 text-base font-bold text-white shadow-glow">{ds.cta}</button>
-                  {(screen === 0 || screen === N - 1) && (
-                    <button onClick={() => openSignup("expert")} className="h-14 rounded-[28px] border border-purple-600/[0.16] bg-white/70 px-6 text-[15px] font-semibold text-purple-600">Join as an expert</button>
-                  )}
-                </div>
+                <p className="mt-5 text-[16.5px] leading-relaxed text-ink-500">{ds.b}</p>
+              </div>
+              {/* Primary CTA — fixed size, pinned to the bottom-right on every screen */}
+              <div className="absolute bottom-12 right-16 flex items-center gap-4">
+                {(screen === 0 || screen === N - 1) && (
+                  <button onClick={() => openSignup("expert")} className="h-14 rounded-[28px] border border-purple-600/[0.16] bg-white/70 px-6 text-[15px] font-semibold text-purple-600">Join as an expert</button>
+                )}
+                <button onClick={desktopPrimary} className="bg-primary-gradient h-14 w-[240px] rounded-[28px] text-base font-bold text-white shadow-glow">{ds.cta}</button>
               </div>
             </>
           )}
@@ -509,7 +480,7 @@ export default function Welcome() {
         </section>
 
         {/* SCREEN 4 · HOW IT WORKS */}
-        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#F3EDFB 0%,#FBF9FE 60%,#F6EEF6 100%)", display: "flex", flexDirection: "column", padding: "110px 30px 44px" }}>
+        <section className="dw-slide" style={{ flex: "0 0 100%", height: "100%", boxSizing: "border-box", position: "relative", overflowY: "auto", overflowX: "hidden", background: "linear-gradient(180deg,#F3EDFB 0%,#FBF9FE 60%,#F6EEF6 100%)", display: "flex", flexDirection: "column", padding: "110px 30px 48px" }}>
           <div style={{ marginBottom: 22 }}>
             <div style={{ ...eyebrow, marginBottom: 12 }}>How Dew works</div>
             <h2 style={{ ...heading(32), lineHeight: 1.12 }}>
@@ -559,7 +530,7 @@ export default function Welcome() {
             style={{ background: "linear-gradient(180deg,#FDFBFF,#F7F1FA)", animation: "dwSheetUp .42s cubic-bezier(.2,.8,.3,1)" }}
           >
             <div className="mx-auto mb-[18px] h-[5px] w-[42px] rounded-full bg-[rgba(123,82,196,0.22)]" />
-            <SignupContent route={route} setRoute={setRoute} gotoSignup={gotoSignup} gotoSSO={gotoSSO} goLogin={goLogin} />
+            <SignupContent route={route} setRoute={setRoute} gotoEmail={gotoEmail} gotoSSO={gotoSSO} goLogin={goLogin} />
           </div>
         </div>
       )}
