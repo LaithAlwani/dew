@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
+import { getUserAccess } from "@dew/auth/role";
 
-// The app starts at authentication. Signed-in users are sent on to /home by
-// Clerk's redirect; the marketing site owns the pre-signup story (/get-started).
-export default function Index() {
-  redirect("/sign-in");
+// Smart landing: signed-out → sign-in; dual users → their remembered view.
+export const dynamic = "force-dynamic";
+
+export default async function Index() {
+  const access = await getUserAccess();
+  if (!access) redirect("/sign-in");
+  if (access.isExpert && access.activeMode === "expert") redirect("/expert/dashboard");
+  redirect("/home");
 }

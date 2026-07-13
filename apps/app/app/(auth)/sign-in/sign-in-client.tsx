@@ -16,7 +16,9 @@ import {
 type Strategy = "oauth_google" | "oauth_apple";
 type Role = "client" | "expert";
 
-const destFor = (role: Role) => (role === "expert" ? "/expert/dashboard" : "/home");
+// "Join as an expert" at sign-in sends the user into the expert flow: approved
+// experts get forwarded to their dashboard, everyone else lands on verification.
+const destFor = (role: Role) => (role === "expert" ? "/become-expert" : "/home");
 
 export function SignInClient({
   initialSSO,
@@ -46,10 +48,13 @@ export function SignInClient({
     async (strategy: Strategy) => {
       setError(null);
       setBusyProvider(strategy);
+      const dest = destFor(role);
       const { error: err } = await signIn.sso({
         strategy,
-        redirectUrl: destFor(role),
-        redirectCallbackUrl: "/sso-callback",
+        redirectUrl: dest,
+        // Carry the client/expert choice through the OAuth round-trip so the
+        // callback lands them in the right place (not the hardcoded fallback).
+        redirectCallbackUrl: `/sso-callback?dest=${encodeURIComponent(dest)}`,
       });
       if (err) {
         setBusyProvider(null);

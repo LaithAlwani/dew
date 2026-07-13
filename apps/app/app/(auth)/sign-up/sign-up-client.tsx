@@ -17,7 +17,8 @@ import {
 type Role = "client" | "expert";
 type Strategy = "oauth_google" | "oauth_apple";
 
-const destFor = (role: Role) => (role === "expert" ? "/expert/apply" : "/onboarding");
+// Sign-up "expert" = create a client account + apply as an expert → /become-expert.
+const destFor = (role: Role) => (role === "expert" ? "/become-expert" : "/onboarding");
 const subtitleFor = (role: Role) =>
   role === "expert"
     ? "Set up your expert profile to start guiding clients."
@@ -54,10 +55,12 @@ export function SignUpClient({
     async (strategy: Strategy) => {
       setError(null);
       setBusyProvider(strategy);
+      const target = destFor(role);
       const { error: err } = await signUp.sso({
         strategy,
-        redirectUrl: destFor(role),
-        redirectCallbackUrl: "/sso-callback",
+        redirectUrl: target,
+        // Carry the client/expert choice through the OAuth round-trip.
+        redirectCallbackUrl: `/sso-callback?dest=${encodeURIComponent(target)}`,
         unsafeMetadata: { role },
       });
       if (err) {

@@ -1,5 +1,9 @@
 import { CreditCard, Bell, Lock, Bookmark, HelpCircle, FileText, ChevronRight } from "lucide-react";
+import { getUserAccess } from "@dew/auth/role";
 import { LogoutButton } from "@/components/logout-button";
+import { ModeSwitchButton } from "@/components/mode-switch-button";
+
+export const dynamic = "force-dynamic";
 
 const SETTINGS = [
   { icon: CreditCard, label: "Subscription & billing", meta: "Free" },
@@ -10,7 +14,8 @@ const SETTINGS = [
   { icon: FileText, label: "Terms & privacy" },
 ];
 
-export default function ClientProfile() {
+export default async function ClientProfile() {
+  const access = await getUserAccess();
   return (
     <div className="mx-auto w-full max-w-[1160px]">
       <div className="mb-6">
@@ -87,6 +92,7 @@ export default function ClientProfile() {
             ))}
           </div>
 
+          {access?.isExpert && <ModeSwitchButton to="expert" />}
           <LogoutButton />
         </div>
       </div>

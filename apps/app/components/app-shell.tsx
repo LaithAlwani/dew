@@ -6,17 +6,21 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bell, Search } from "lucide-react";
 import { cn, BottomNav, type NavItem } from "@dew/ui";
+import { ModeSwitchButton } from "@/components/mode-switch-button";
 
 /**
  * Responsive app chrome (client + expert). Desktop: 248px frosted sidebar +
  * top bar (design "Dew Home Desktop"). Mobile: floating bottom nav.
  * Pass the audience's nav items; pages render only their content region.
+ * `switchTo` shows a client/expert view switcher in the sidebar (dual users).
  */
 export function AppShell({
   nav,
+  switchTo,
   children,
 }: {
   nav: NavItem[];
+  switchTo?: "client" | "expert";
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -29,7 +33,7 @@ export function AppShell({
       {/* Sidebar — desktop only */}
       <aside className="sticky top-0 hidden h-dvh w-[248px] flex-none flex-col border-r border-white/70 bg-white/60 px-5 py-7 backdrop-blur-xl lg:flex">
         <div className="flex items-center gap-2 px-2 pb-8">
-          <Image src="/dew_logo.PNG" alt="" width={34} height={34} className="h-[34px] w-auto" />
+          <Image src="/logo.webp" alt="" width={34} height={34} className="h-[34px] w-auto" />
           <span className="font-display text-[27px] font-semibold tracking-wide text-purple-700">
             Dew
           </span>
@@ -58,6 +62,7 @@ export function AppShell({
         </nav>
 
         <div className="mt-auto flex flex-col gap-4">
+          {switchTo && <ModeSwitchButton to={switchTo} />}
           <div className="bg-primary-gradient rounded-[18px] p-4 shadow-glow">
             <div className="font-display text-[17px] text-white">Go Premium</div>
             <div className="mt-1 text-[11px] leading-snug text-white/80">

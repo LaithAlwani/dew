@@ -1,5 +1,6 @@
 import { Check, BadgeCheck } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
+import { ModeSwitchButton } from "@/components/mode-switch-button";
 
 const CHECKLIST = [
   { label: "Profile photo", done: true },
@@ -89,6 +90,7 @@ export default function ExpertProfileBuilder() {
             </div>
           </div>
 
+          <ModeSwitchButton to="client" />
           <LogoutButton />
         </div>
 

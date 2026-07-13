@@ -1,10 +1,19 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-export const roleValidator = v.union(
+// Every account is a client. Being an expert is an add-on the user applies for
+// and an admin approves — so a user can be BOTH (dual profile).
+export const expertStatusValidator = v.union(
+  v.literal("none"),
+  v.literal("pending"),
+  v.literal("approved"),
+);
+
+// Which view a dual (client+expert) user is currently in — remembered so their
+// next visit lands where they left off.
+export const activeModeValidator = v.union(
   v.literal("client"),
   v.literal("expert"),
-  v.literal("admin"),
 );
 
 export const subscriptionValidator = v.union(
@@ -20,12 +29,15 @@ export const accountStatusValidator = v.union(
 );
 
 export default defineSchema({
-  // One row per Clerk user. `role` drives client / expert / admin routing.
+  // One row per Clerk user. Everyone is a client; `expertStatus` + `isAdmin` add
+  // capabilities on top, and `activeMode` remembers a dual user's current view.
   users: defineTable({
     clerkUserId: v.string(),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    role: roleValidator,
+    expertStatus: expertStatusValidator,
+    isAdmin: v.boolean(),
+    activeMode: activeModeValidator,
     accountStatus: accountStatusValidator,
     subscriptionStatus: subscriptionValidator,
     onboardingComplete: v.boolean(),

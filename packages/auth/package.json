@@ -6,10 +6,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./proxy": "./src/proxy.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./role": "./src/role.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.5.12"
+    "@clerk/nextjs": "^7.5.12",
+    "@dew/backend": "*"
   },
   "peerDependencies": {
     "convex": "^1.42.1",
