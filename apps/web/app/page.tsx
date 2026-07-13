@@ -163,9 +163,10 @@ export default function Landing() {
           <span className="font-display text-[22px] font-semibold text-purple-700">Dew</span>
         </div>
         <div className="flex-1" />
-        {["Privacy", "Terms", "For experts", "Support"].map((l) => (
-          <span key={l} className="cursor-pointer text-sm font-semibold text-ink-700 hover:text-purple-600">{l}</span>
-        ))}
+        <Link href="/privacy" className="text-sm font-semibold text-ink-700 hover:text-purple-600">Privacy</Link>
+        <Link href="/terms" className="text-sm font-semibold text-ink-700 hover:text-purple-600">Terms</Link>
+        <a href={`${APP_URL}/sign-up?role=expert`} className="text-sm font-semibold text-ink-700 hover:text-purple-600">For experts</a>
+        <a href="mailto:support@dewbeautyapp.com" className="text-sm font-semibold text-ink-700 hover:text-purple-600">Support</a>
         <span className="text-[13px] text-ink-400">© 2026 Dew</span>
       </footer>
     </div>
