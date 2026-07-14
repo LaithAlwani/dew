@@ -1,5 +1,9 @@
+import Link from "next/link";
 import { CreditCard, Bell, Lock, Bookmark, HelpCircle, FileText, ChevronRight } from "lucide-react";
+import { fetchQuery } from "convex/nextjs";
+import { auth, currentUser } from "@dew/auth/server";
 import { getUserAccess } from "@dew/auth/role";
+import { api } from "@dew/backend/api";
 import { LogoutButton } from "@/components/logout-button";
 import { ModeSwitchButton } from "@/components/mode-switch-button";
 
@@ -15,7 +19,30 @@ const SETTINGS = [
 ];
 
 export default async function ClientProfile() {
-  const access = await getUserAccess();
+  const [access, user] = await Promise.all([getUserAccess(), currentUser()]);
+
+  // Saved onboarding answers (beauty profile).
+  const { getToken } = await auth();
+  const token = await getToken({ template: "convex" });
+  const profile = token
+    ? await fetchQuery(api.onboarding.myProfile, {}, { token }).catch(() => null)
+    : null;
+
+  const name =
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+    user?.username ||
+    "Your profile";
+  const email =
+    user?.emailAddresses?.find((e) => e.id === user?.primaryEmailAddressId)
+      ?.emailAddress ??
+    user?.emailAddresses?.[0]?.emailAddress ??
+    "";
+  const avatar = user?.imageUrl;
+
+  const concerns = Array.from(
+    new Set([...(profile?.goals ?? []), ...(profile?.struggles ?? [])]),
+  );
+
   return (
     <div className="mx-auto w-full max-w-[1160px]">
       <div className="mb-6">
@@ -28,40 +55,63 @@ export default async function ClientProfile() {
         <div className="flex flex-col gap-6">
           <div className="rounded-[24px] border border-white/90 bg-white/[0.88] p-6 shadow-[0_14px_30px_-12px_rgba(120,80,160,0.22)]">
             <div className="flex items-center gap-4">
-              <div className="size-[76px] flex-none rounded-full bg-[url('/makeup.jpg')] bg-cover bg-center" />
-              <div className="flex-1">
-                <div className="font-display text-[26px] font-semibold leading-none text-ink-900">Reeva K.</div>
-                <div className="mt-1.5 text-[12.5px] text-ink-500">reeva.k@email.com</div>
+              <div
+                className="size-[76px] flex-none rounded-full bg-cover bg-center"
+                style={
+                  avatar
+                    ? { backgroundImage: `url(${avatar})` }
+                    : { background: "linear-gradient(150deg,#E7D6F2,#F4E4EE)" }
+                }
+              />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-display text-[26px] font-semibold leading-none text-ink-900">{name}</div>
+                <div className="mt-1.5 truncate text-[12.5px] text-ink-500">{email}</div>
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-[10px] bg-purple-500/10 px-2.5 py-1">
                   <span className="size-1.5 rounded-full bg-ink-400" />
                   <span className="text-[11px] font-bold text-purple-600">Free plan</span>
                 </div>
               </div>
-              <button className="h-[38px] rounded-[19px] border border-purple-600/15 bg-white px-4 text-[12.5px] font-semibold text-ink-700">Edit</button>
             </div>
           </div>
 
           <div className="rounded-[24px] border border-white/90 bg-white/[0.88] p-6 shadow-[0_14px_30px_-12px_rgba(120,80,160,0.22)]">
             <div className="mb-4 flex items-baseline justify-between">
               <div className="font-display text-xl font-semibold text-ink-900">Your beauty profile</div>
-              <span className="cursor-pointer text-[12.5px] font-semibold text-purple-500">Edit</span>
+              <Link href="/onboarding" className="text-[12.5px] font-semibold text-purple-500">
+                {profile ? "Edit" : "Set up"}
+              </Link>
             </div>
-            <div className="flex items-center justify-between border-b border-purple-600/[0.07] pb-3">
-              <span className="text-[13px] text-ink-500">Skin type</span>
-              <span className="text-[13.5px] font-bold text-ink-900">Combination</span>
-            </div>
-            <div className="flex items-center justify-between border-b border-purple-600/[0.07] py-3">
-              <span className="text-[13px] text-ink-500">Budget</span>
-              <span className="text-[13.5px] font-bold text-ink-900">Mid-range</span>
-            </div>
-            <div className="pt-3">
-              <div className="mb-2.5 text-[13px] text-ink-500">Concerns &amp; goals</div>
-              <div className="flex flex-wrap gap-2">
-                {["Acne", "Texture", "Clear, calm skin", "Budget-friendly"].map((t) => (
-                  <span key={t} className="rounded-[13px] bg-purple-500/[0.09] px-3 py-1.5 text-xs font-semibold text-purple-600">{t}</span>
-                ))}
+
+            {profile ? (
+              <>
+                <Row label="Skin type" value={profile.skinType} />
+                <Row label="Budget" value={profile.budget} />
+                <Row label="Experience" value={profile.experienceLevel} />
+                {profile.makeupStyle && <Row label="Makeup goal" value={profile.makeupStyle} />}
+                {concerns.length > 0 && (
+                  <div className="pt-3">
+                    <div className="mb-2.5 text-[13px] text-ink-500">Concerns &amp; goals</div>
+                    <div className="flex flex-wrap gap-2">
+                      {concerns.map((t) => (
+                        <span key={t} className="rounded-[13px] bg-purple-500/[0.09] px-3 py-1.5 text-xs font-semibold text-purple-600">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-2xl bg-purple-500/[0.06] p-5 text-center">
+                <p className="text-[13.5px] leading-relaxed text-ink-500">
+                  Answer a few quick questions so Dew can match you with the right experts.
+                </p>
+                <Link
+                  href="/onboarding"
+                  className="bg-primary-gradient mt-3.5 inline-flex h-11 items-center rounded-[22px] px-6 text-[13.5px] font-bold text-white shadow-glow"
+                >
+                  Complete your profile
+                </Link>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -96,6 +146,15 @@ export default async function ClientProfile() {
           <LogoutButton />
         </div>
       </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex items-center justify-between border-b border-purple-600/[0.07] py-3 first:pt-0">
+      <span className="text-[13px] text-ink-500">{label}</span>
+      <span className="text-[13.5px] font-bold text-ink-900">{value ?? "—"}</span>
     </div>
   );
 }

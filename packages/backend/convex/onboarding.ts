@@ -24,23 +24,37 @@ export const save = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const user = await ctx.db
+    // Get-or-create: a client may reach onboarding before any layout provisions
+    // their row, so create it here (onboarding is client-only) if it's missing.
+    const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", identity.subject))
       .unique();
-    if (!user) throw new Error("User not found");
+    const userId =
+      existingUser?._id ??
+      (await ctx.db.insert("users", {
+        clerkUserId: identity.subject,
+        name: identity.name,
+        email: identity.email,
+        expertStatus: "none",
+        isAdmin: false,
+        activeMode: "client",
+        accountStatus: "active",
+        subscriptionStatus: "free",
+        onboardingComplete: false,
+      }));
 
-    const existing = await ctx.db
+    const existingProfile = await ctx.db
       .query("clientProfiles")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .unique();
 
-    if (existing) {
-      await ctx.db.patch("clientProfiles", existing._id, args);
+    if (existingProfile) {
+      await ctx.db.patch("clientProfiles", existingProfile._id, args);
     } else {
-      await ctx.db.insert("clientProfiles", { userId: user._id, ...args });
+      await ctx.db.insert("clientProfiles", { userId, ...args });
     }
-    await ctx.db.patch("users", user._id, { onboardingComplete: true });
+    await ctx.db.patch("users", userId, { onboardingComplete: true });
     return null;
   },
 });

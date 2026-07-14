@@ -3,7 +3,9 @@
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
 import { Check, BadgeCheck } from "lucide-react";
+import { api } from "@dew/backend/api";
 
 type Kind = "single" | "multi";
 type Answers = {
@@ -36,9 +38,31 @@ const EMPTY: Answers = { reason: "", experience: "", struggles: [], skin: "", bu
 
 export default function ClientOnboarding() {
   const router = useRouter();
+  const saveOnboarding = useMutation(api.onboarding.save);
   const [step, setStep] = useState(0);
   const [ans, setAns] = useState<Answers>(EMPTY);
   const advRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Persist the questionnaire (best-effort) then reveal the matches step.
+  const finish = async () => {
+    if (!ans.age || !ans.terms) return;
+    try {
+      await saveOnboarding({
+        goals: ans.reason ? [ans.reason] : [],
+        experienceLevel: ans.experience || undefined,
+        struggles: ans.struggles,
+        budget: ans.budget || undefined,
+        guidancePreference: [],
+        skinType: ans.skin || undefined,
+        skinConcerns: [],
+        makeupStyle: ans.makeup || undefined,
+        consentAccepted: ans.terms,
+      });
+    } catch {
+      // keep going even if the save hiccups
+    }
+    go(TOTAL);
+  };
 
   const isQuestion = step < 6;
   const isConsent = step === 6;
@@ -163,7 +187,7 @@ export default function ClientOnboarding() {
             </div>
             <div className="flex-none px-6 pb-10 pt-4 sm:px-14">
               <button
-                onClick={() => ans.age && ans.terms && go(TOTAL)}
+                onClick={finish}
                 className={`bg-primary-gradient h-[54px] rounded-[27px] px-10 text-[15.5px] font-bold text-white shadow-glow transition-opacity ${ans.age && ans.terms ? "" : "opacity-45"}`}
               >
                 See my matches

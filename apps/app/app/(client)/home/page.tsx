@@ -1,27 +1,64 @@
+import Link from "next/link";
 import { Search, ScanLine, ListChecks, CircleDashed, BadgeCheck } from "lucide-react";
+import { fetchQuery } from "convex/nextjs";
+import { auth, currentUser } from "@dew/auth/server";
+import { api } from "@dew/backend/api";
+
+export const dynamic = "force-dynamic";
 
 const QUICK = [
-  { label: "Find Expert", icon: Search },
-  { label: "Scan Product", icon: ScanLine },
-  { label: "My Routine", icon: ListChecks },
-  { label: "Shade Match", icon: CircleDashed },
+  { label: "Find Expert", icon: Search, href: "/experts" },
+  { label: "Scan Product", icon: ScanLine, href: "/scan" },
+  { label: "My Routine", icon: ListChecks, href: "/routine" },
+  { label: "Shade Match", icon: CircleDashed, href: "/shade-match" },
 ];
 
-const MATCHES = [
-  { name: "Amara R.", tags: "Skincare · Acne", rating: "4.9", price: "from $25", reason: "Strong match for acne + budget" },
-  { name: "Noor S.", tags: "Makeup · Soft glam", rating: "4.8", price: "free intro", reason: "Great for everyday natural looks" },
-];
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
 
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser();
+  const firstName = user?.firstName || "there";
+
+  // Personalize matches from the client's saved onboarding, then fall back to
+  // the top experts if there's nothing (or no match).
+  const { getToken } = await auth();
+  const token = await getToken({ template: "convex" });
+  const profile = token
+    ? await fetchQuery(api.onboarding.myProfile, {}, { token }).catch(() => null)
+    : null;
+  const term = profile
+    ? [...profile.goals, ...profile.struggles, profile.skinType]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
+  let matches = (
+    await fetchQuery(api.experts.list, {
+      paginationOpts: { numItems: 4, cursor: null },
+      search: term || undefined,
+    })
+  ).page;
+  if (matches.length === 0) {
+    matches = (
+      await fetchQuery(api.experts.list, {
+        paginationOpts: { numItems: 4, cursor: null },
+      })
+    ).page;
+  }
+  const top = matches[0];
+
   return (
     <div className="mx-auto w-full max-w-[1160px]">
       {/* greeting */}
       <div className="mb-6">
         <div className="text-[11px] font-semibold uppercase tracking-[1.5px] text-ink-400">
-          Good morning
+          {greeting()}
         </div>
         <h1 className="font-display text-2xl font-semibold leading-tight text-ink-900">
-          Hi, Reeva
+          Hi, {firstName}
         </h1>
       </div>
 
@@ -36,29 +73,38 @@ export default function Home() {
                 Your next best step
               </div>
               <div className="font-display mb-5 text-[32px] leading-[1.12] text-white">
-                Book your first consult with Amara — your top skin match.
+                {top
+                  ? `Book your first consult with ${top.name} — a top match for you.`
+                  : "Tell us about your goals and meet your first expert match."}
               </div>
               <div className="flex flex-wrap gap-3">
-                <button className="h-[46px] rounded-full bg-white px-6 text-sm font-bold text-purple-600">
-                  Book a consult
-                </button>
-                <button className="h-[46px] rounded-full border border-white/40 bg-white/10 px-5 text-sm font-semibold text-white">
-                  Maybe later
-                </button>
+                <Link
+                  href={top ? `/booking?expert=${top._id}` : "/onboarding"}
+                  className="flex h-[46px] items-center rounded-full bg-white px-6 text-sm font-bold text-purple-600"
+                >
+                  {top ? "Book a consult" : "Personalize Dew"}
+                </Link>
+                <Link
+                  href="/experts"
+                  className="flex h-[46px] items-center rounded-full border border-white/40 bg-white/10 px-5 text-sm font-semibold text-white"
+                >
+                  Browse experts
+                </Link>
               </div>
             </div>
           </div>
 
           {/* quick actions */}
           <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-            {QUICK.map(({ label, icon: Icon }) => (
-              <button
+            {QUICK.map(({ label, icon: Icon, href }) => (
+              <Link
                 key={label}
+                href={href}
                 className="hover:shadow-float flex flex-col gap-3 rounded-[20px] border border-purple-600/[0.08] bg-white/75 p-5 text-left transition"
               >
                 <Icon className="size-6 text-purple-500" strokeWidth={1.7} />
                 <span className="text-[13px] font-semibold text-ink-700">{label}</span>
-              </button>
+              </Link>
             ))}
           </div>
 
@@ -66,32 +112,32 @@ export default function Home() {
           <div>
             <div className="mb-3.5 flex items-baseline justify-between">
               <h2 className="font-display text-2xl font-semibold text-ink-900">Best for you</h2>
-              <span className="cursor-pointer text-[13px] font-semibold text-purple-500">See all</span>
+              <Link href="/experts" className="text-[13px] font-semibold text-purple-500">See all</Link>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {MATCHES.map((e) => (
-                <div key={e.name} className="rounded-[22px] border border-white/90 bg-white/85 p-[18px] shadow-[0_12px_26px_-10px_rgba(120,80,160,0.2)]">
+              {matches.map((e) => (
+                <div key={e._id} className="rounded-[22px] border border-white/90 bg-white/85 p-[18px] shadow-[0_12px_26px_-10px_rgba(120,80,160,0.2)]">
                   <div className="flex items-center gap-3">
                     <div className="size-[54px] flex-none rounded-full bg-[url('/makeup.jpg')] bg-cover bg-center" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-base font-bold text-ink-900">{e.name}</span>
-                        <BadgeCheck className="size-[15px] text-purple-500" />
+                        <span className="truncate text-base font-bold text-ink-900">{e.name}</span>
+                        <BadgeCheck className="size-[15px] flex-none text-purple-500" />
                       </div>
-                      <div className="mt-0.5 text-[11.5px] text-ink-500">{e.tags}</div>
+                      <div className="mt-0.5 truncate text-[11.5px] text-ink-500">{e.specialties.slice(0, 2).join(" · ")}</div>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-[11.5px]">
                     <span className="text-warning">★</span>
-                    <span className="font-bold text-ink-900">{e.rating}</span>
-                    <span className="text-ink-400">· {e.price}</span>
+                    <span className="font-bold text-ink-900">{e.rating.toFixed(1)}</span>
+                    <span className="text-ink-400">· {e.priceLabel}</span>
                   </div>
                   <div className="mt-[11px] rounded-xl bg-purple-500/[0.09] px-[11px] py-[9px] text-[11px] font-semibold text-purple-600">
                     {e.reason}
                   </div>
-                  <button className="bg-primary-gradient mt-3 h-10 w-full rounded-full text-[13px] font-bold text-white">
+                  <Link href={`/experts/${e._id}`} className="bg-primary-gradient mt-3 flex h-10 w-full items-center justify-center rounded-full text-[13px] font-bold text-white">
                     View profile
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -128,7 +174,7 @@ export default function Home() {
               <span className="size-2.5 rounded-full bg-purple-500" />
               <span className="text-[13px] font-semibold text-ink-900">Evening · 3 steps</span>
             </div>
-            <div className="mt-3.5 cursor-pointer text-xs font-semibold text-purple-500">Open routine →</div>
+            <Link href="/routine" className="mt-3.5 block text-xs font-semibold text-purple-500">Open routine →</Link>
           </div>
 
           <div className="rounded-[22px] border border-purple-500/15 bg-[linear-gradient(135deg,rgba(123,82,196,0.1),rgba(200,120,190,0.1))] p-5">
@@ -136,7 +182,7 @@ export default function Home() {
             <div className="text-[13.5px] font-semibold leading-snug text-ink-900">
               Have a beauty question? Ask it anonymously and hear from real experts.
             </div>
-            <div className="mt-3 cursor-pointer text-xs font-semibold text-purple-500">Ask now →</div>
+            <Link href="/community" className="mt-3 block text-xs font-semibold text-purple-500">Ask now →</Link>
           </div>
         </div>
       </div>
