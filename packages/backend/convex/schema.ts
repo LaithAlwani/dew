@@ -58,4 +58,30 @@ export default defineSchema({
     allergies: v.optional(v.string()),
     consentAccepted: v.boolean(),
   }).index("by_userId", ["userId"]),
+
+  // Public expert listings that clients browse + book. `userId` links to a real
+  // signed-up expert once approved; seeded showcase experts leave it unset.
+  experts: defineTable({
+    userId: v.optional(v.id("users")),
+    name: v.string(),
+    title: v.string(),
+    bio: v.string(),
+    specialties: v.array(v.string()),
+    rating: v.number(),
+    reviewCount: v.number(),
+    priceLabel: v.string(),
+    reason: v.string(),
+    services: v.array(
+      v.object({ name: v.string(), meta: v.string(), price: v.string() }),
+    ),
+    published: v.boolean(),
+    // Lowercased "name title specialties" — powers full-text search + chips.
+    searchText: v.optional(v.string()),
+  })
+    .index("by_published", ["published"])
+    .index("by_userId", ["userId"])
+    .searchIndex("search_experts", {
+      searchField: "searchText",
+      filterFields: ["published"],
+    }),
 });

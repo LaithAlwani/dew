@@ -1,7 +1,6 @@
 {
   "extends": "@dew/config/tsconfig.nextapp.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
