@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, ScanLine, ListChecks, CircleDashed, BadgeCheck } from "lucide-react";
+import { Search, CalendarDays, ListChecks, MessageCircle, BadgeCheck } from "lucide-react";
 import { fetchQuery } from "convex/nextjs";
 import { auth, currentUser } from "@dew/auth/server";
 import { api } from "@dew/backend/api";
@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 const QUICK = [
   { label: "Find Expert", icon: Search, href: "/experts" },
-  { label: "Scan Product", icon: ScanLine, href: "/scan" },
+  { label: "My Bookings", icon: CalendarDays, href: "/appointments" },
   { label: "My Routine", icon: ListChecks, href: "/routine" },
-  { label: "Shade Match", icon: CircleDashed, href: "/shade-match" },
+  { label: "Messages", icon: MessageCircle, href: "/messages" },
 ];
 
 function greeting() {
