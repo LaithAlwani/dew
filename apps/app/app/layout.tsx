@@ -19,6 +19,9 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://app.dewbeautyapp.com",
+  ),
   title: {
     default: "Dew",
     template: "%s · Dew",
@@ -27,6 +30,18 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   icons: { icon: "/logo.webp", shortcut: "/logo.webp", apple: "/logo.webp" },
   appleWebApp: { capable: true, title: "Dew", statusBarStyle: "default" },
+  openGraph: {
+    type: "website",
+    siteName: "Dew",
+    title: "Dew — beauty guidance that fits you",
+    description: "Get matched with vetted beauty experts around your real goals, budget and skin.",
+    // opengraph-image.tsx is picked up automatically.
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dew — beauty guidance that fits you",
+    description: "Get matched with vetted beauty experts around your real goals, budget and skin.",
+  },
 };
 
 export const viewport: Viewport = {

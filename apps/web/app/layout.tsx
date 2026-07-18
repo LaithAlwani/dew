@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   creator: SITE.name,
   publisher: SITE.name,
   category: "beauty",
+  // Same brand favicon as the app.
+  icons: { icon: "/logo.webp", shortcut: "/logo.webp", apple: "/logo.webp" },
   alternates: {
     canonical: "/",
   },

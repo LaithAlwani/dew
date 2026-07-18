@@ -1,9 +1,8 @@
 import { ImageResponse } from "next/og";
-import { SITE } from "../app/site-config";
 import { LOGO_PNG } from "./logo-data";
 
 export const ogSize = { width: 1200, height: 630 };
-export const ogAlt = `${SITE.name} — ${SITE.tagline}`;
+export const ogAlt = "Dew — beauty guidance that fits you";
 export const ogContentType = "image/png";
 
 const chip = (label: string) => (
@@ -25,7 +24,7 @@ const chip = (label: string) => (
   </div>
 );
 
-/** Shared 1200×630 social card used by both opengraph-image and twitter-image. */
+/** Branded 1200×630 social card for shared app links. */
 export function renderOgImage() {
   return new ImageResponse(
     (
@@ -100,13 +99,13 @@ export function renderOgImage() {
               maxWidth: 860,
             }}
           >
-            {SITE.shortDescription}
+            Get matched with vetted beauty experts around your real goals, budget and skin.
           </div>
         </div>
 
         {/* Chips */}
         <div style={{ display: "flex", gap: 16 }}>
-          {["Vetted experts", "Matched to your goals", "Real budgets"].map(chip)}
+          {["Vetted experts", "Matched to your goals", "Book in minutes"].map(chip)}
         </div>
       </div>
     ),

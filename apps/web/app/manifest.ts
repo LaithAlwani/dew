@@ -11,9 +11,6 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#faf8ff",
     theme_color: SITE.themeColor,
     categories: ["beauty", "lifestyle", "shopping"],
-    icons: [
-      { src: "/icon", sizes: "32x32", type: "image/png" },
-      { src: "/apple-icon", sizes: "180x180", type: "image/png", purpose: "maskable" },
-    ],
+    icons: [{ src: "/logo.webp", sizes: "any", type: "image/webp" }],
   };
 }
