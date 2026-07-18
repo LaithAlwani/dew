@@ -84,4 +84,42 @@ export default defineSchema({
       searchField: "searchText",
       filterFields: ["published"],
     }),
+
+  // A client's booked consult with an expert. Expert/service details are
+  // denormalized for display without a join.
+  appointments: defineTable({
+    clientUserId: v.id("users"),
+    expertId: v.id("experts"),
+    expertName: v.string(),
+    serviceName: v.string(),
+    servicePrice: v.string(),
+    scheduledAt: v.number(), // epoch ms of the start
+    durationMin: v.number(),
+    note: v.optional(v.string()),
+    status: v.union(
+      v.literal("confirmed"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    ),
+    // Payment (Stripe wired later — treated as paid for now).
+    amountCents: v.number(),
+    currency: v.string(),
+    paymentStatus: v.union(
+      v.literal("free"),
+      v.literal("paid"),
+      v.literal("pending"),
+      v.literal("refunded"),
+    ),
+    stripeSessionId: v.optional(v.string()),
+    stripePaymentIntentId: v.optional(v.string()),
+    // Contact + meeting (Google Meet wired later).
+    clientEmail: v.optional(v.string()),
+    clientName: v.optional(v.string()),
+    expertEmail: v.optional(v.string()),
+    meetLink: v.optional(v.string()),
+    calendarEventId: v.optional(v.string()),
+  })
+    .index("by_client", ["clientUserId"])
+    .index("by_client_and_time", ["clientUserId", "scheduledAt"])
+    .index("by_expert_and_time", ["expertId", "scheduledAt"]),
 });

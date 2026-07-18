@@ -18,6 +18,20 @@ function greeting() {
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+function apptBadge(ms: number) {
+  const d0 = new Date(ms).setHours(0, 0, 0, 0);
+  const t0 = new Date().setHours(0, 0, 0, 0);
+  const days = Math.round((d0 - t0) / 86400000);
+  return days <= 0
+    ? "Today"
+    : days === 1
+      ? "Tomorrow"
+      : new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+function apptTime(ms: number) {
+  return new Date(ms).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
 export default async function Home() {
   const user = await currentUser();
   const firstName = user?.firstName || "there";
@@ -49,6 +63,11 @@ export default async function Home() {
     ).page;
   }
   const top = matches[0];
+
+  const upcoming = token
+    ? await fetchQuery(api.appointments.upcoming, {}, { token }).catch(() => [])
+    : [];
+  const nextAppt = upcoming[0];
 
   return (
     <div className="mx-auto w-full max-w-[1160px]">
@@ -149,19 +168,30 @@ export default async function Home() {
           <div className="rounded-[22px] border border-white/90 bg-white/85 p-5 shadow-[0_12px_26px_-10px_rgba(120,80,160,0.2)]">
             <div className="mb-4 flex items-center justify-between">
               <div className="text-[11px] font-semibold uppercase tracking-[1.5px] text-ink-400">Upcoming</div>
-              <div className="rounded-lg bg-purple-500/10 px-2.5 py-1 text-[11px] font-bold text-purple-500">Tomorrow</div>
+              {nextAppt && (
+                <div className="rounded-lg bg-purple-500/10 px-2.5 py-1 text-[11px] font-bold text-purple-500">{apptBadge(nextAppt.scheduledAt)}</div>
+              )}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="size-[46px] flex-none rounded-full bg-[url('/makeup.jpg')] bg-cover bg-center" />
-              <div className="flex-1">
-                <div className="text-[14.5px] font-bold text-ink-900">Skin Concern Consult</div>
-                <div className="mt-0.5 text-[11.5px] text-ink-500">Amara R. · 2:00 PM · 30 min</div>
+            {nextAppt ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="size-[46px] flex-none rounded-full bg-[url('/makeup.jpg')] bg-cover bg-center" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14.5px] font-bold text-ink-900">{nextAppt.serviceName}</div>
+                    <div className="mt-0.5 truncate text-[11.5px] text-ink-500">{nextAppt.expertName} · {apptTime(nextAppt.scheduledAt)} · {nextAppt.durationMin} min</div>
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2.5">
+                  <button className="bg-primary-gradient h-10 flex-1 rounded-full text-[13px] font-bold text-white">Join</button>
+                  <Link href="/appointments" className="flex h-10 flex-1 items-center justify-center rounded-full border border-purple-600/15 bg-white text-[13px] font-semibold text-ink-700">Manage</Link>
+                </div>
+              </>
+            ) : (
+              <div className="py-1">
+                <p className="text-[12.5px] leading-relaxed text-ink-500">No upcoming consults yet. Book one to get personalized guidance.</p>
+                <Link href="/experts" className="mt-3 block text-xs font-semibold text-purple-500">Find an expert →</Link>
               </div>
-            </div>
-            <div className="mt-4 flex gap-2.5">
-              <button className="bg-primary-gradient h-10 flex-1 rounded-full text-[13px] font-bold text-white">Join</button>
-              <button className="h-10 flex-1 rounded-full border border-purple-600/15 bg-white text-[13px] font-semibold text-ink-700">Reschedule</button>
-            </div>
+            )}
           </div>
 
           <div className="rounded-[22px] border border-white/90 bg-white/85 p-5 shadow-[0_12px_26px_-10px_rgba(120,80,160,0.2)]">

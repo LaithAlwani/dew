@@ -15,6 +15,10 @@
     "typecheck": "tsc -p convex/tsconfig.json --noEmit"
   },
   "dependencies": {
-    "convex": "^1.42.1"
+    "convex": "^1.42.1",
+    "nodemailer": "^9.0.3"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.1"
   }
 }
