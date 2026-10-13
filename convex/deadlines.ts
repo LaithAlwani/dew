@@ -1,7 +1,33 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
+import { internalMutation, type MutationCtx } from "./_generated/server";
 import { applyTransition } from "./introductions";
 import { DEADLINE_EVENT, isLegalTransition } from "./lib/fsm";
+import { notify } from "./notifications";
+
+// A reminder notifies the party who needs nudging: the professional for the
+// preview/contact reminders, the client for the client reminder.
+async function notifyReminder(ctx: MutationCtx, deadline: Doc<"deadlines">): Promise<void> {
+  const intro = await ctx.db.get(deadline.introductionId);
+  if (!intro) {
+    return;
+  }
+  let recipientId: Doc<"users">["_id"] | undefined;
+  if (deadline.kind === "client_reminder") {
+    const consultation = await ctx.db.get(intro.consultationId);
+    recipientId = consultation?.clientId;
+  } else {
+    const professional = await ctx.db.get(intro.professionalId);
+    recipientId = professional?.userId;
+  }
+  if (recipientId) {
+    await notify(ctx, {
+      recipientId,
+      templateKey: deadline.kind,
+      introductionId: deadline.introductionId,
+    });
+  }
+}
 
 // Swept by the 5-minute cron. Fires every pending deadline that is due:
 // expiry kinds drive an FSM transition; reminder kinds only notify (Phase 5).
@@ -23,7 +49,8 @@ export const sweepDeadlines = internalMutation({
 
       const event = DEADLINE_EVENT[deadline.kind];
       if (!event) {
-        // Reminder kind — notify only. Wired to notify() in Phase 5.
+        // Reminder kind — notify only, no status change.
+        await notifyReminder(ctx, deadline);
         continue;
       }
       const intro = await ctx.db.get(deadline.introductionId);

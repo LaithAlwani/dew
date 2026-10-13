@@ -216,7 +216,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_uniqueKey", ["uniqueKey"])
-    .index("by_recipientId", ["recipientId"]),
+    .index("by_recipientId", ["recipientId"])
+    .index("by_deliveryState", ["deliveryState", "createdAt"]),
 
   reliabilityEvents: defineTable({
     professionalId: v.id("professionals"),
