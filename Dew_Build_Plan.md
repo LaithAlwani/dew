@@ -270,7 +270,7 @@ Mechanism: a Next 16 `proxy.ts` rewrites by request hostname into the `(marketin
 | Step | Status |
 |---|---|
 | 1. Foundations | ✅ Done — all 7 phases (see below) |
-| 2. Professional supply | ⬜ Not started |
+| 2. Professional supply | ✅ Done — backend + pro workspace UI + admin approval UI |
 | 3. Client discovery | ⬜ Not started |
 | 4. Auth and merge | ⬜ Not started |
 | 5. Matching v1 | ⬜ Not started |
@@ -292,4 +292,11 @@ Mechanism: a Next 16 `proxy.ts` rewrites by request hostname into the `(marketin
 - ✅ Phase 6 — Design tokens. `packages/tokens/theme.css` = the Tailwind v4 preset (`@theme`): full palette (foundation/surface/lavender/butter/sage/powder/navy/coral), `--font-display`/`--font-body` (→ next/font vars), three radius steps, two shadows, motion scale. `packages/tokens/index.ts` exposes token *names* (no hex). `app/globals.css` imports the preset, sets base type, and honours `prefers-reduced-motion`. Fonts: Fraunces + Inter via next/font (self-hosted, `--font-fraunces`/`--font-inter`). Boilerplate `page.tsx` replaced with a token-styled placeholder home. Gates green: `next build` compiles consuming the preset, grep finds hex only in `theme.css`, served HTML shows fonts from `/_next/static/media/*.woff2` (no fonts.googleapis.com), reduced-motion reset in place; biome + tsc clean.
 - ✅ Phase 7 — App shell + host routing. `proxy.ts` routes by hostname: `app.` → `app/pro/*`, `admin.` → `app/admin/*`, apex → `(marketing)` + `(client)` (and apex `/pro`,`/admin` → 404). Surfaces: `(marketing)` (home + nav, indexed), `(client)` (`/discover`, noindex), `pro/` (workspace shell, noindex), `admin/` (noindex). Better Auth `trustedOrigins` env-driven — dev covers all three hosts × ports 3000/3001/3002 (Next falls back when ports are busy), set on the deployment; verified auth + routing work on :3001. Safe-area `@utility` classes (pt/pb/pl/pr-safe) + `viewport-fit=cover`. Gates green: `next build` (routes /,/discover,/pro,/admin + Proxy registered), live host-routing verified via Host header (apex→marketing, app.→pro, admin.→admin, apex /pro→404), biome + tsc + 26 tests clean. Note: `(pro)`/`(admin)` implemented as real path segments (`pro/`,`admin/`) rather than route groups, so the proxy can rewrite subdomain roots to them.
 
-**➡ Foundations (Step 1) complete. Next: Step 2 (Professional supply) or Step 3 (Client discovery) — the first feature UI.**
+**➡ Foundations (Step 1) complete.**
+
+**Step 2 — Professional supply** (approach: self-claim behind the admin approval gate — nobody goes live without manual approval)
+- ✅ 2.1 Backend. `@dew/validation` (shared zod: service keys, business hours, `professionalProfileSchema`) now a root dep so Convex bundles it. `convex/professionals.ts`: `getMyProfessional`, `claimProfessional` (flips role → professional, opens `pending_review`, idempotent), `updateProfile` (owner-only, zod-validated), admin `listPendingProfessionals`/`approveProfessional` (→ approved + one-time `free_grant` of 3 credits)/`rejectProfessional`. 7 tests (claim+role flip, idempotent, valid/invalid profile, non-pro rejected, approve grants once + non-admin rejected, listing requires admin). 33 total green.
+- ✅ 2.2 Pro workspace UI (app.). First interactive screens: `components/pro/{AuthPanel,ProWorkspace,ProfileEditor}.tsx`. Email/password auth (Better Auth client), `ensureCurrentUser` on sign-in, claim CTA when no profile, profile editor (display name, bio, service chips, business hours via time inputs, capacity, booking link) validated with the shared zod schema, approval-status banner. Wired at `app/pro/page.tsx`. Verified: builds, and on `app.localhost:<port>` the workspace renders + mounts.
+- ✅ 2.3 Admin approval UI (admin.). `components/admin/AdminApprovals.tsx` + `app/admin/page.tsx`: admin-gated (via `getMe.role`) pending list with approve/reject; non-admins see "admins only"; admin role is seeded directly (no UI to grant it). Gates green: biome + tsc + `next build` (/pro, /admin) + 33 tests.
+- ✅ 2.4 Resubmit after rejection. `resubmitForReview` (owner-only, `rejected` → `pending_review`) + editor button when rejected, so a rejected pro can fix + requeue. 2 tests (reappears in queue; only valid from rejected). 35 total green.
+- First real multi-port win observed: another (Clerk) app held :3000, so Dew ran on :3001 with all three surfaces + auth working.

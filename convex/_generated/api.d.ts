@@ -20,6 +20,7 @@ import type * as lib_channels from "../lib/channels.js";
 import type * as lib_deadlines from "../lib/deadlines.js";
 import type * as lib_fsm from "../lib/fsm.js";
 import type * as notifications from "../notifications.js";
+import type * as professionals from "../professionals.js";
 import type * as users from "../users.js";
 
 import type {
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "lib/deadlines": typeof lib_deadlines;
   "lib/fsm": typeof lib_fsm;
   notifications: typeof notifications;
+  professionals: typeof professionals;
   users: typeof users;
 }>;
 
