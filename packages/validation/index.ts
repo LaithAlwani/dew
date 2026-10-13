@@ -42,3 +42,39 @@ export const professionalProfileSchema = z.object({
 });
 
 export type ProfessionalProfileInput = z.infer<typeof professionalProfileSchema>;
+
+// --- Client discovery (step 3) ---
+
+export const SERVICE_CATEGORIES = ["makeup", "skincare", "lesson"] as const;
+export const MAKEUP_OCCASIONS = ["bridal", "event", "everyday", "editorial"] as const;
+export const TIMING_OPTIONS = ["within_2_weeks", "this_month", "flexible"] as const;
+export const BUDGET_BANDS = ["under_100", "100_250", "250_500", "500_plus", "unsure"] as const;
+export const SAFETY_FLAGS = ["sensitive_skin", "allergies", "pregnancy", "none"] as const;
+
+// All fields optional: the questionnaire saves progressively as the client
+// answers, so a partial session is valid. Completeness is a separate check.
+export const discoveryAnswersSchema = z
+  .object({
+    category: z.enum(SERVICE_CATEGORIES),
+    occasion: z.enum(MAKEUP_OCCASIONS),
+    timing: z.enum(TIMING_OPTIONS),
+    budget: z.enum(BUDGET_BANDS),
+    city: z.string().trim().max(80),
+    safetyFlags: z.array(z.enum(SAFETY_FLAGS)),
+    notes: z.string().trim().max(1000),
+  })
+  .partial();
+
+export type DiscoveryAnswers = z.infer<typeof discoveryAnswersSchema>;
+
+// Enough answered to hand off to matching: category always, occasion when it's
+// makeup, plus timing and city.
+export function isDiscoveryComplete(a: DiscoveryAnswers): boolean {
+  if (!a.category) {
+    return false;
+  }
+  if (a.category === "makeup" && !a.occasion) {
+    return false;
+  }
+  return Boolean(a.timing && a.city);
+}

@@ -12,6 +12,7 @@ import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as deadlines from "../deadlines.js";
+import type * as discovery from "../discovery.js";
 import type * as erasure from "../erasure.js";
 import type * as http from "../http.js";
 import type * as introductions from "../introductions.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   crons: typeof crons;
   deadlines: typeof deadlines;
+  discovery: typeof discovery;
   erasure: typeof erasure;
   http: typeof http;
   introductions: typeof introductions;

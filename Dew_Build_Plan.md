@@ -271,7 +271,7 @@ Mechanism: a Next 16 `proxy.ts` rewrites by request hostname into the `(marketin
 |---|---|
 | 1. Foundations | ✅ Done — all 7 phases (see below) |
 | 2. Professional supply | ✅ Done — backend + pro workspace UI + admin approval UI |
-| 3. Client discovery | ⬜ Not started |
+| 3. Client discovery | ✅ Done — anonymous discovery backend + branching questionnaire UI |
 | 4. Auth and merge | ⬜ Not started |
 | 5. Matching v1 | ⬜ Not started |
 | 6. Profile and consultation | ⬜ Not started |
@@ -300,3 +300,7 @@ Mechanism: a Next 16 `proxy.ts` rewrites by request hostname into the `(marketin
 - ✅ 2.3 Admin approval UI (admin.). `components/admin/AdminApprovals.tsx` + `app/admin/page.tsx`: admin-gated (via `getMe.role`) pending list with approve/reject; non-admins see "admins only"; admin role is seeded directly (no UI to grant it). Gates green: biome + tsc + `next build` (/pro, /admin) + 33 tests.
 - ✅ 2.4 Resubmit after rejection. `resubmitForReview` (owner-only, `rejected` → `pending_review`) + editor button when rejected, so a rejected pro can fix + requeue. 2 tests (reappears in queue; only valid from rejected). 35 total green.
 - First real multi-port win observed: another (Clerk) app held :3000, so Dew ran on :3001 with all three surfaces + auth working.
+
+**Step 3 — Client discovery**
+- ✅ 3.1 Discovery backend. Shared zod in `@dew/validation` (`discoveryAnswersSchema` — partial for progressive saves; service categories, occasions, timing, budget bands, safety flags; `isDiscoveryComplete`). `convex/discovery.ts`: `getSession`/`saveAnswers` — anonymous (no auth), keyed by client `anonymousId`, upsert+merge, enum-validated. 4 tests (create, progressive merge = one row, null for unknown, invalid enum rejected). Attaches to an account later via the existing `mergeAnonymousSession`.
+- ✅ 3.2 Discovery UI. `components/discovery/Discovery.tsx` — branching questionnaire (category → occasion only for makeup → timing → budget → city → safety → summary), stable `anonymousId` in localStorage, saves each step, resumes a saved session, progress + back, completeness-aware summary. Landing CTA (`dew.com` → `/discover`) wired. Gates green: biome + tsc + `next build` (/discover) + 39 tests; verified landing CTA + /discover render on :3001.

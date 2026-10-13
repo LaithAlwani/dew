@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col justify-center gap-6 px-6 py-24">
@@ -10,9 +12,12 @@ export default function HomePage() {
         fits. Full experience coming soon.
       </p>
       <div>
-        <span className="inline-flex items-center rounded-md bg-sage px-3 py-1 font-body text-navy text-sm">
-          Foundations in place
-        </span>
+        <Link
+          href="/discover"
+          className="inline-flex items-center rounded-md bg-coral px-6 py-3 font-body text-surface"
+        >
+          Get matched
+        </Link>
       </div>
     </main>
   );
